@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swiss Bauökonomie - Expert Tool (Minimal)</title>
+    <style>
+        :root {
+            --m-red: #D40909; --m-blue: #005A9C; --m-yellow: #F9D006;
+            --m-white: #F2F2F2; --m-black: #1A1A1A;
+            /* Greyscale for initial states */
+            --m-grey-dark: #444444; --m-grey-mid: #888888; --m-grey-light: #CCCCCC;
+            
+            /* ADJUSTMENT 1: Added Beige for other grids (Classic minimal tone) */
+            --m-beige: #F5F5DC;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #e5e5e5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        h1 { font-weight: 800; letter-spacing: -1px; text-transform: uppercase; margin-bottom: 20px; text-align: center; font-size: 1.5rem;}
+
+        /* Mondrian Grid Layout (Recursive Subdivision simulation) */
+        .mondrian-canvas {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: repeat(12, 1fr);
+            gap: 6px; /* Optimized border gap */
+            background-color: var(--m-black);
+            padding: 6px;
+            width: 90vw;
+            max-width: 900px;
+            height: 75vh;
+            border: 3px solid var(--m-black);
+            box-shadow: 15px 15px 0px rgba(0,0,0,0.1);
+        }
+
+        .block {
+            background-color: var(--m-white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            text-align: center;
+            color: var(--m-black);
+            position: relative;
+        }
+
+        /* Defining 9 parameters in grid areas */
+        .p1 { grid-area: 1 / 1 / 7 / 6; } /* Area: top-left red target */
+        .p2 { grid-area: 1 / 6 / 5 / 10; } 
+        .p3 { grid-area: 1 / 10 / 6 / 13; } /* Area: top-right blue target */
+        .p4 { grid-area: 5 / 6 / 9 / 10; }
+        .p5 { grid-area: 7 / 1 / 13 / 4; } /* Area: bottom-left yellow target */
+        .p6 { grid-area: 7 / 4 / 10 / 6; }
+        .p7 { grid-area: 10 / 4 / 13 / 8; }
+        .p8 { grid-area: 9 / 8 / 13 / 10; }
+        .p9 { grid-area: 6 / 10 / 13 / 13; } /* Area: right long strip */
+
+        /* Interaction Logic for Red/Blue/Yellow Grids */
+        .p1:not(.filled) { background-color: var(--m-grey-dark); color: white; }
+        .p1:hover, .p1.filled { background-color: var(--m-red); color: white; }
+
+        .p3:not(.filled) { background-color: var(--m-grey-mid); color: white; }
+        .p3:hover, .p3.filled { background-color: var(--m-blue); color: white; }
+
+        .p5:not(.filled) { background-color: var(--m-grey-light); }
+        .p5:hover, .p5.filled { background-color: var(--m-yellow); }
+
+        /* ADJUSTMENT 2: Hover logic for OTHER grids changed from Green to Beige */
+        .block:not(.p1):not(.p3):not(.p5):hover { background-color: var(--m-beige); opacity: 1;}
+        .block:not(.p1):not(.p3):not(.p5).filled { background-color: var(--m-beige); }
+
+        .param-title { font-size: 0.9rem; font-weight: 900; line-height: 1.1; margin-bottom: 5px; text-transform: uppercase; }
+        .param-val { font-size: 1.8rem; font-weight: 900; opacity: 0.7; }
+        
+        /* Small OK tag when filled */
+        .filled::before { content: "✓"; position: absolute; top: 5px; left: 8px; font-size: 10px; font-weight: bold; background: rgba(0,0,0,0.6); color: white; padding: 2px 5px; border-radius: 2px; }
+
+        /* Modals Background */
+        .modal-bg {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        /* --- Input Modal Styling --- */
+        .modal-content {
+            background: white; padding: 40px; border-top: 15px solid var(--m-black); width: 400px; max-width: 90%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .modal-content h2 { margin-top: 0; font-size: 24px; text-transform: uppercase; font-weight: 900; }
+        .modal-content p { font-size: 14px; color: #555; margin-bottom: 25px; line-height: 1.6; }
+        .modal-content input { width: 100%; padding: 15px; border: 3px solid var(--m-black); font-size: 22px; box-sizing: border-box; font-weight: bold;}
+        .modal-btns { margin-top: 25px; display: flex; gap: 10px; align-items: center;}
+
+        /* --- NEW: Result Modal Styling (Minimal, centered popup) --- */
+        #resultModal .modal-content {
+            border-top: none;
+            border: 5px solid var(--m-black);
+            background: var(--m-white);
+            text-align: center;
+            width: 450px;
+            animation: modalPop 0.5s ease-out;
+            position: relative;
+        }
+
+        @keyframes modalPop {
+            0% { transform: scale(0.5) translateY(100px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .result-header { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; color: #555; }
+        
+        /* ADJUSTMENT 3: Center container for rolling number (No image here) */
+        .rolling-container {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .rolling-score {
+            font-size: 80px;
+            font-weight: 900;
+            color: var(--m-red);
+            line-height: 1;
+            font-feature-settings: "tnum"; /* Prevents number jumping */
+        }
+
+        .result-eval {
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-top: 3px solid var(--m-black);
+            padding-top: 15px;
+            margin-top: 15px;
+            letter-spacing: 1px;
+        }
+
+        /* Responsiveness */
+        @media (max-width: 700px) {
+            .mondrian-canvas { height: 70vh; gap: 4px; padding: 4px; border-width: 2px;}
+            .param-title { font-size: 0.75rem; }
+            .param-val { font-size: 1.5rem; }
+            .modal-content { padding: 20px; }
+            .rolling-score { font-size: 50px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Expertensystem: Wohnbau-Ökonomie</h1>
+
+    <div class="mondrian-canvas" id="canvas">
+        </div>
+
+    <div class="modal-bg" id="resultModal">
+        <div class="modal-content">
+            <div class="result-header">Gesamtergebnis</div>
+            
+            <div class="rolling-container">
+                <div class="rolling-score" id="finalScoreCounter">0.0%</div>
+            </div>
+
+            <div class="result-eval" id="finalEvaluationText">-</div>
+            
+            <button onclick="location.reload()" style="background: var(--m-black); color:white; padding: 10px 20px; border:none; cursor:pointer; font-weight:bold; margin-top: 25px; text-transform: uppercase; font-size: 11px;">Neue Analyse</button>
+        </div>
+    </div>
+
+    <div class="modal-bg" id="inputModal">
+        <div class="modal-content">
+            <h2 id="mTitle" style="margin-top:0"></h2>
+            <p id="mDesc"></p>
+            <label id="mLabel" style="font-size: 11px; font-weight: bold; color: #333; text-transform: uppercase; letter-spacing: 1px;"></label>
+            <input type="number" id="mInput">
+            <div class="modal-btns">
+                <button onclick="save()" style="background: var(--m-black); color:white; padding: 12px 24px; border:none; cursor:pointer; font-weight:bold; text-transform: uppercase; font-size: 12px;">Speichern</button>
+                <button onclick="closeInputModal()" style="background: none; border:none; cursor:pointer; text-decoration: underline; color: #999; font-size: 12px;">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Parameters (Verbatim P1-P9 structure as defined before)
+    const data = [
+         { id: 1, name: "Flächeneffizienz", sub: "HNF/GF", w: 0.20, desc: "Verhältnis der Hauptnutzfläche zur Geschossfläche.", iMin: 0, iMax: 1.0, iStep: 0.01, target: 0.75, dir: 'up' },
+        { id: 2, name: "Kompaktheit", sub: "AW/GF", w: 0.15, desc: "Verhältnis der Aussenwandfläche zur Geschossfläche.", iMin: 0.1, iMax: 2.5, iStep: 0.05, target: 0.45, dir: 'down' },
+        { id: 3, name: "Erschliessung", sub: "Whg/Kern", w: 0.15, desc: "Anzahl der Wohnungen pro vertikalem Kern.", iMin: 1, iMax: 10, iStep: 1, target: 5, dir: 'up' },
+        { id: 4, name: "Ausnutzung", sub: "Volumen", w: 0.10, desc: "Verhältnis der realisierten Ausnutzung zum Maximum(0-100%).", iMin: 0, iMax: 100, iStep: 1, target: 100, dir: 'up' },
+        { id: 5, name: "Unterterrain", sub: "UG-Anteil", w: 0.10, desc: "Volumenanteil unter Terrain.", iMin: 0, iMax: 1.0, iStep: 0.05, target: 0.15, dir: 'down' },
+        { id: 6, name: "Installation", sub: "Vertikalität", w: 0.08, desc: "Grad der Schachtbündelung und Steigzonen (0-100%).", iMin: 0, iMax: 100, iStep: 1, target: 100, dir: 'up' },
+        { id: 7, name: "Nachhaltigkeit", sub: "Subvention", w: 0.07, desc: "Erreichung von Minergie/SNBS Standards (Punkte).", iMin: 0, iMax: 100, iStep: 1, target: 100, dir: 'up' },
+        { id: 8, name: "Standardisierung", sub: "Module", w: 0.08, desc: "Grad der seriellen Fertigung (0-100%).", iMin: 0, iMax: 100, iStep: 1, target: 100, dir: 'up' },
+        // --- Confirmed: Param 9 with German example in desc ---
+        { id: 9, name: "Erneuerungszyklus", sub: "Jahre", w: 0.07, desc: "Erwartete Jahre bis zur nächsten grossen Sanierung. Beispiel: Holzfassaden (ca. 15 J.) vs. hochwertige Massivbauwände (40-50 J.).", iMin: 10, iMax: 60, iStep: 1, target: 30, dir: 'up' }
+    ];
+
+    let userValues = {};
+    let scores = {};
+    let activeId = null;
+
+    // Initialize Grid
+    const canvas = document.getElementById('canvas');
+    data.forEach(p => {
+        const el = document.createElement('div');
+        el.className = `block p${p.id}`;
+        el.id = `block-${p.id}`;
+        el.innerHTML = `<div class="param-title">${p.name}<br><small>${p.sub}</small></div><div class="param-val" id="v${p.id}">-</div>`;
+        el.onclick = () => openInputModal(p.id);
+        canvas.appendChild(el);
+    });
+
+    // --- Input Modal Logic ---
+    function openInputModal(id) {
+        activeId = id;
+        const p = data.find(x => x.id === id);
+        document.getElementById('mTitle').innerText = p.name;
+        document.getElementById('mDesc').innerText = p.desc;
+        
+        const input = document.getElementById('mInput');
+        input.min = p.iMin;
+        input.max = p.iMax;
+        input.step = p.iStep;
+        input.value = userValues[id] || "";
+        
+        document.getElementById('mLabel').innerText = `Geben Sie den physikalischen Wert ein (${p.iMin} bis ${p.iMax})`;
+        
+        document.getElementById('inputModal').style.display = 'flex';
+        input.focus();
+    }
+
+    function closeInputModal() { document.getElementById('inputModal').style.display = 'none'; }
+
+    function save() {
+        const p = data.find(x => x.id === activeId);
+        const val = parseFloat(document.getElementById('mInput').value);
+        
+        if (isNaN(val) || val < p.iMin || val > p.iMax) {
+            alert(`Wert muss zwischen ${p.iMin} und ${p.iMax} liegen.`);
+            return;
+        }
+
+        userValues[activeId] = val;
+
+        let s = 0;
+        if (p.dir === 'up') {
+            s = Math.min(100, (val / p.target) * 100);
+        } else {
+            // Down direction (lower is better) logic
+            s = val <= p.target ? 100 : Math.max(0, 100 - ((val - p.target) / p.target) * 50);
+        }
+        scores[activeId] = s;
+        
+        document.getElementById(`v${activeId}`).innerText = val;
+        document.getElementById(`block-${activeId}`).classList.add('filled');
+        
+        closeInputModal();
+        checkAndCalcTotal();
+    }
+
+    // --- Calculation and Minimal Result Logic ---
+    function checkAndCalcTotal() {
+        let weightedSum = 0;
+        let count = 0;
+        data.forEach(p => {
+            if (scores[p.id] !== undefined) {
+                weightedSum += scores[p.id] * p.w;
+                count++;
+            }
+        });
+
+        if (count === 9) {
+            showRollingResult(weightedSum);
+        }
+    }
+
+    // Rolling Score Logic (Starts fast, slows down for suspense)
+    function showRollingResult(finalTotal) {
+        // 1. Pop the central result modal
+        const resultModal = document.getElementById('resultModal');
+        resultModal.style.display = 'flex';
+
+        const counterDisplay = document.getElementById('finalScoreCounter');
+        const evalText = document.getElementById('finalEvaluationText');
+
+        // Animation settings
+        const duration = 2000; // Counter takes 2 seconds
+        const startTime = performance.now();
+
+        function updateCounter(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Easing function (easeOutQuad) for "suspense" feel
+            const easedProgress = progress * (2 - progress);
+
+            const currentValue = (finalTotal * easedProgress).toFixed(1);
+            counterDisplay.innerText = currentValue + "%";
+
+            if (progress < 1) {
+                requestAnimationFrame(updateCounter);
+            } else {
+                // Counting finished. Show evaluation text.
+                let ev = finalTotal > 80 ? "HOHE EFFIZIENZ (A-Bereich)" : (finalTotal > 60 ? "MODERATE BILANZ (B-Bereich)" : "DEFIZITÄR (C-Bereich)");
+                evalText.innerText = ev;
+                // --- ADJUSTMENT 3: CONDITION FOR IMAGE IS REMOVED ---
+            }
+        }
+
+        // Start animation
+        requestAnimationFrame(updateCounter);
+    }
+
+    // Close Modals on background click
+    window.onclick = function(event) {
+        const inputM = document.getElementById('inputModal');
+        const resultM = document.getElementById('resultModal');
+        if (event.target === inputM) closeInputModal();
+    }
+</script>
+</body>
+</html>
