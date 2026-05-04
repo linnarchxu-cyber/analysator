@@ -83,8 +83,22 @@
         .block:not(.p1):not(.p3):not(.p5):hover { background-color: var(--m-beige); opacity: 1;}
         .block:not(.p1):not(.p3):not(.p5).filled { background-color: var(--m-beige); }
 
-        .param-title { font-size: 0.9rem; font-weight: 900; line-height: 1.1; margin-bottom: 5px; text-transform: uppercase; }
-        .param-val { font-size: 1.8rem; font-weight: 900; opacity: 0.7; }
+        .param-title { 
+        font-size: clamp(0.6rem, 2vw, 0.9rem); /* Automatically scales between 0.6rem and 0.9rem */
+        font-weight: 900; 
+        line-height: 1.1; 
+        margin-bottom: 5px; 
+        text-transform: uppercase; 
+        width: 100%; /* Ensures text knows the boundary */
+        word-wrap: break-word; /* Forces long words to break if necessary */
+        hyphens: auto; /* Adds hyphens for German words like "Flächeneffizienz" */
+        }
+
+        .param-val { 
+        font-size: clamp(1rem, 4vw, 1.8rem); /* Scales the number size for mobile */
+        font-weight: 900; 
+        opacity: 0.7; 
+        }
         
         /* Small OK tag when filled */
         .filled::before { content: "✓"; position: absolute; top: 5px; left: 8px; font-size: 10px; font-weight: bold; background: rgba(0,0,0,0.6); color: white; padding: 2px 5px; border-radius: 2px; }
