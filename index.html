@@ -219,7 +219,7 @@
         const el = document.createElement('div');
         el.className = `block p${p.id}`;
         el.id = `block-${p.id}`;
-        el.innerHTML = `<div class="param-title">${p.name}<br><small>${p.sub}</small></div><div class="param-val" id="v${p.id}">-</div>`;
+        el.innerHTML = `<div class="param-title">${p.name}</div><div class="param-val" id="v${p.id}">-</div>`;
         el.onclick = () => openInputModal(p.id);
         canvas.appendChild(el);
     });
