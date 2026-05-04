@@ -237,7 +237,7 @@
         input.step = p.iStep;
         input.value = userValues[id] || "";
         
-        document.getElementById('mLabel').innerText = `Geben Sie den physikalischen Wert ein (${p.iMin} bis ${p.iMax})`;
+        document.getElementById('mLabel').innerText = `${p.sub} (${p.iMin} bis ${p.iMax})`;
         
         document.getElementById('inputModal').style.display = 'flex';
         input.focus();
