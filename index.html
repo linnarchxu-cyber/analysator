@@ -204,8 +204,8 @@
         { id: 5, name: "Unterterrain", sub: "UG-Anteil", w: 0.10, desc: "Volumenanteil unter Terrain.", iMin: 0, iMax: 1.0, iStep: 0.05, target: 0.15, dir: 'down' },
         { id: 6, name: "Installation", sub: "Vertikalität", w: 0.08, desc: "Grad der Schachtbündelung und Steigzonen (0-100%).", iMin: 0, iMax: 100, iStep: 1, target: 100, dir: 'up' },
         { id: 7, name: "Nachhaltigkeit", sub: "Subvention", w: 0.08, desc: "Erreichung von Minergie/SNBS Standards (Punkte).", iMin: 0, iMax: 100, iStep: 1, target: 100, dir: 'up' },
-        { id: 8, name: "Glasanteil", sub: "Anteil der Fensterflächen an der gesamten Fassadenfläche über Terrain", w: 0.07, desc: "Energieeffizienz der Wohnungen).", iMin: 0.20, iMax: 1.00, iStep: 0.01, target: 100, dir: 'down' },
-        { id: 9, name: "Optimierte Wohnungsgrösse", sub: "Wohnungsgrösse m²/Anzahl Zimmer", w: 0.07, desc: "Kompaktheit und Nutzbarkeit der Wohnungen).", iMin: 10, iMax: 50, iStep: 0.1, tMin: 22, tMax: 24, type: 'range' },
+        { id: 8, name: "Glasanteil", sub: "Anteil der Fensterflächen an der gesamten Fassadenfläche über Terrain", w: 0.07, desc: "Energieeffizienz der Wohnungen.", iMin: 0, iMax: 1.0, iStep: 0.01, target: 100, dir: 'down' },
+        { id: 9, name: "Optimierte Wohnungsgrösse", sub: "Wohnungsgrösse m²/Anzahl Zimmer", w: 0.07, desc: "Kompaktheit und Nutzbarkeit der Wohnungen.", iMin: 10, iMax: 50, iStep: 0.1, tMin: 22, tMax: 24, type: 'range' },
     ];
 
     let userValues = {};
@@ -218,7 +218,7 @@
         const el = document.createElement('div');
         el.className = `block p${p.id}`;
         el.id = `block-${p.id}`;
-        el.innerHTML = `<div class="param-title">${p.name}</div><div class="param-val" id="v${p.id}">-</div>`;
+        el.innerHTML = `<div class="param-title">${p.name}</div><div class="param-val" id="v${p.id}"></div>`;
         el.onclick = () => openInputModal(p.id);
         canvas.appendChild(el);
     });
